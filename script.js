@@ -140,3 +140,135 @@ if (navBrand) {
 console.log('%c¡Hola! 👋', 'color: #6366f1; font-size: 24px; font-weight: bold;');
 console.log('%cGracias por visitar mi portafolio', 'color: #8b5cf6; font-size: 16px;');
 console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14px; font-style: italic;');
+
+// ----------------------
+// Chatbot asistente (Gemini Flash) - JS puro con fetch
+// ----------------------
+
+(() => {
+    const toggle = document.getElementById('chatbot-toggle');
+    const panel = document.getElementById('chatbot-panel');
+    const closeBtn = document.getElementById('chatbot-close');
+    const form = document.getElementById('chatbot-form');
+    const input = document.getElementById('chatbot-input');
+    const messagesEl = document.getElementById('chatbot-messages');
+
+    if (!toggle || !panel || !form || !input || !messagesEl) return;
+
+    function openPanel() {
+        panel.hidden = false;
+        panel.style.transform = 'translateY(0)';
+        input.focus();
+    }
+
+    function closePanel() {
+        panel.hidden = true;
+    }
+
+    toggle.addEventListener('click', () => {
+        if (panel.hidden) openPanel(); else closePanel();
+    });
+    closeBtn.addEventListener('click', closePanel);
+
+    function appendMessage(text, role = 'assistant') {
+        const div = document.createElement('div');
+        div.className = `chatbot-message ${role}`;
+        div.textContent = text;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function appendLoading() {
+        const div = document.createElement('div');
+        div.className = 'chatbot-message assistant';
+        div.id = 'chatbot-loading';
+        div.textContent = 'Escribiendo...';
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeLoading() {
+        const el = document.getElementById('chatbot-loading');
+        if (el) el.remove();
+    }
+
+    // Obtener/guardar API key y endpoint en sessionStorage (temporal, no seguro para producción)
+    function ensureApiSettings() {
+        let key = sessionStorage.getItem('GEMINI_API_KEY');
+        let url = sessionStorage.getItem('GEMINI_API_URL');
+        if (!key) {
+            key = prompt('Introduce tu API key para Gemini (se guardará temporalmente en esta sesión):');
+            if (key) sessionStorage.setItem('GEMINI_API_KEY', key.trim());
+        }
+        if (!url) {
+            // A modo de ayuda dejamos un valor por defecto orientativo; cambialo si usas otro proxy/endpont
+            url = prompt('Introduce la URL del endpoint para Gemini Flash (por ejemplo tu proxy). Deja en blanco para usar el valor por defecto:','https://YOUR_GEMINI_ENDPOINT') || 'https://YOUR_GEMINI_ENDPOINT';
+            if (url) sessionStorage.setItem('GEMINI_API_URL', url.trim());
+        }
+        return { key: sessionStorage.getItem('GEMINI_API_KEY'), url: sessionStorage.getItem('GEMINI_API_URL') };
+    }
+
+    async function sendToGemini(message) {
+        const settings = ensureApiSettings();
+        if (!settings.key || !settings.url) throw new Error('Falta API key o URL del endpoint.');
+
+        // Payload genérico: intenta convertirse a la forma que tu endpoint requiera.
+        const payload = {
+            model: 'gemini-flash-1',
+            prompt: message,
+            max_tokens: 512
+        };
+
+        const res = await fetch(settings.url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.key}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        try {
+            const json = JSON.parse(text);
+            // Varios formatos posibles; intentamos algunos campos comunes
+            if (json.output && typeof json.output === 'string') return json.output;
+            if (json.output && json.output[0] && json.output[0].content) return json.output[0].content;
+            if (json.candidates && json.candidates[0] && json.candidates[0].content) return json.candidates[0].content;
+            if (json.choices && json.choices[0] && json.choices[0].message) return json.choices[0].message.content || JSON.stringify(json.choices[0].message);
+            // Si llega como texto simple dentro de alguna propiedad
+            const flat = JSON.stringify(json);
+            return flat;
+        } catch (e) {
+            // No JSON, devolver texto plano
+            return text;
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const val = input.value.trim();
+        if (!val) return;
+        appendMessage(val, 'user');
+        input.value = '';
+        appendLoading();
+        try {
+            const reply = await sendToGemini(val);
+            removeLoading();
+            appendMessage(reply, 'assistant');
+        } catch (err) {
+            removeLoading();
+            appendMessage('Hubo un error al conectar con el asistente. Revisa la API key y el endpoint.', 'assistant');
+            console.error('Chatbot error:', err);
+        }
+    });
+
+    // Atajos
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePanel();
+    });
+
+    // Mensaje de bienvenida
+    appendMessage('Hola — soy tu asistente. Escribe una pregunta y pulsa Enviar.', 'assistant');
+
+})();
