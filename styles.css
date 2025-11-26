@@ -217,7 +217,7 @@ body {
 }
 
 .image-placeholder::before {
-    content: '📸';
+    content: '';
     font-size: 4rem;
     position: absolute;
     top: 50%;
