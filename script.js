@@ -155,20 +155,40 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
 
     if (!toggle || !panel || !form || !input || !messagesEl) return;
 
+    const root = document.getElementById('chatbot-root');
+
     function openPanel() {
-        panel.hidden = false;
-        panel.style.transform = 'translateY(0)';
-        input.focus();
+        if (!root.classList.contains('open')) {
+            root.classList.add('open');
+            panel.removeAttribute('hidden');
+            toggle.setAttribute('aria-expanded', 'true');
+            input.focus();
+        }
     }
 
     function closePanel() {
-        panel.hidden = true;
+        if (root.classList.contains('open')) {
+            root.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+            // hide after transition for better a11y
+            setTimeout(() => panel.setAttribute('hidden', 'true'), 240);
+        }
     }
 
-    toggle.addEventListener('click', () => {
-        if (panel.hidden) openPanel(); else closePanel();
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (root.classList.contains('open')) closePanel(); else openPanel();
     });
-    closeBtn.addEventListener('click', closePanel);
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closePanel(); });
+
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!root.classList.contains('open')) return;
+        if (!root.contains(e.target)) closePanel();
+    });
+
+    // Evitar cerrar cuando se hace click dentro del panel
+    panel.addEventListener('click', (e) => e.stopPropagation());
 
     function appendMessage(text, role = 'assistant') {
         const div = document.createElement('div');
@@ -260,6 +280,14 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
             removeLoading();
             appendMessage('Hubo un error al conectar con el asistente. Revisa la API key y el endpoint.', 'assistant');
             console.error('Chatbot error:', err);
+        }
+    });
+
+    // Toggle with Enter when toggle has focus
+    toggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle.click();
         }
     });
 
