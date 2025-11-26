@@ -3,13 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sofia Victoria Espinola Medina</title>
+    <meta name="description" content="Sofia Victoria Espinola Medina - Estudiante de Ingeniería en Sistemas Computacionales">
+    <title>Sofia Victoria Espinola Medina | ISC</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div>
-        <h1>Sofia Victoria Espinola Medina</h1>
-        <p>Estudiante de Ingenieria en Sistemas Computacionales</p>
-        </h1>
-    </div>
+    <!-- Navegación -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">Sofia Espinola</div>
+            <ul class="nav-menu">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#sobre-mi">Sobre Mí</a></li>
+                <li><a href="#experiencia">Experiencia</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="fade-in">Hola, soy <span class="highlight">Sofia Victoria</span></h1>
+                <h2 class="fade-in delay-1">Estudiante de Ingeniería en Sistemas Computacionales</h2>
+                <p class="fade-in delay-2">Apasionada por la tecnología y el desarrollo de soluciones innovadoras</p>
+                <div class="hero-buttons fade-in delay-3">
+                    <a href="#sobre-mi" class="btn btn-primary">Conoce más</a>
+                    <a href="#contacto" class="btn btn-secondary">Contacto</a>
+                </div>
+            </div>
+            <div class="hero-image fade-in delay-1">
+                <div class="image-container">
+                    <div class="image-placeholder">
+                        <!-- Reemplaza con tu fotografía -->
+                        <img src="profile.jpg" alt="Sofia Victoria Espinola Medina" class="profile-photo">
+                        <div class="image-overlay"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span></span>
+        </div>
+    </section>
+
+    <!-- Sobre Mí Section -->
+    <section id="sobre-mi" class="about">
+        <div class="container">
+            <h2 class="section-title">Sobre Mí</h2>
+            <div class="about-content">
+                <div class="about-card">
+                    <div class="card-icon">👩‍💻</div>
+                    <h3>Sofia Victoria Espinola Medina</h3>
+                    <p class="about-description">
+                        Estudiante comprometida de Ingeniería en Sistemas Computacionales, 
+                        actualmente cursando el tercer semestre. Mi pasión por la tecnología 
+                        me impulsa a aprender constantemente y desarrollar habilidades que me 
+                        permitan crear soluciones innovadoras.
+                    </p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎓</div>
+                        <h3>Educación</h3>
+                        <p>Tercer Semestre</p>
+                        <span class="stat-subtitle">ISC</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💼</div>
+                        <h3>Experiencia</h3>
+                        <p>1 Año</p>
+                        <span class="stat-subtitle">Desarrollo</span>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🚀</div>
+                        <h3>Proyectos</h3>
+                        <p>En Crecimiento</p>
+                        <span class="stat-subtitle">Aprendizaje Continuo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experiencia Section -->
+    <section id="experiencia" class="experience">
+        <div class="container">
+            <h2 class="section-title">Experiencia & Habilidades</h2>
+            <div class="experience-content">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h3>Experiencia Profesional</h3>
+                            <span class="timeline-date">1 Año</span>
+                            <p>
+                                Durante mi primer año de experiencia, he desarrollado habilidades 
+                                en diversas áreas de la ingeniería en sistemas, participando en 
+                                proyectos que combinan teoría y práctica.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h3>Estudios Actuales</h3>
+                            <span class="timeline-date">Tercer Semestre - ISC</span>
+                            <p>
+                                Enfocada en fortalecer mis conocimientos en programación, 
+                                estructuras de datos, bases de datos y desarrollo de software.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="skills">
+                    <h3>Áreas de Interés</h3>
+                    <div class="skills-grid">
+                        <div class="skill-tag">Desarrollo de Software</div>
+                        <div class="skill-tag">Programación</div>
+                        <div class="skill-tag">Bases de Datos</div>
+                        <div class="skill-tag">Algoritmos</div>
+                        <div class="skill-tag">Diseño Web</div>
+                        <div class="skill-tag">Trabajo en Equipo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto Section -->
+    <section id="contacto" class="contact">
+        <div class="container">
+            <h2 class="section-title">Conectemos</h2>
+            <p class="contact-description">
+                Estoy abierta a oportunidades de aprendizaje, colaboración y networking profesional
+            </p>
+            <div class="contact-grid">
+                <a href="mailto:sofia.espinola@ejemplo.com" class="contact-card">
+                    <div class="contact-icon">📧</div>
+                    <h3>Email</h3>
+                    <p>sofia.espinola@ejemplo.com</p>
+                </a>
+                <a href="https://linkedin.com" target="_blank" class="contact-card">
+                    <div class="contact-icon">💼</div>
+                    <h3>LinkedIn</h3>
+                    <p>Sofia Victoria Espinola</p>
+                </a>
+                <a href="https://github.com" target="_blank" class="contact-card">
+                    <div class="contact-icon">💻</div>
+                    <h3>GitHub</h3>
+                    <p>@sofiaespinola</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Sofia Victoria Espinola Medina. Todos los derechos reservados.</p>
+            <p class="footer-subtitle">Construyendo el futuro, una línea de código a la vez</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
