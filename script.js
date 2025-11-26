@@ -214,37 +214,52 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
 
     // Obtener/guardar API key y endpoint en sessionStorage (temporal, no seguro para producción)
     function ensureApiSettings() {
-        let key = sessionStorage.getItem('GEMINI_API_KEY');
-        let url = sessionStorage.getItem('GEMINI_API_URL');
-        if (!key) {
-            key = prompt('Introduce tu API key para Gemini (se guardará temporalmente en esta sesión):');
-            if (key) sessionStorage.setItem('GEMINI_API_KEY', key.trim());
+        // Soporte de dos modos: "proxy" recomendado (llama a /api/generate local), o "direct" (usa la key en el navegador)
+        let mode = sessionStorage.getItem('CHAT_MODE');
+        if (!mode) {
+            mode = prompt('Elige modo: "proxy" (recomendado) o "direct" (pegar API key en el navegador, no seguro). Escribe proxy o direct:', 'proxy') || 'proxy';
+            mode = mode.toLowerCase() === 'direct' ? 'direct' : 'proxy';
+            sessionStorage.setItem('CHAT_MODE', mode);
         }
-        if (!url) {
-            // A modo de ayuda dejamos un valor por defecto orientativo; cambialo si usas otro proxy/endpont
-            url = prompt('Introduce la URL del endpoint para Gemini Flash (por ejemplo tu proxy). Deja en blanco para usar el valor por defecto:','https://YOUR_GEMINI_ENDPOINT') || 'https://YOUR_GEMINI_ENDPOINT';
-            if (url) sessionStorage.setItem('GEMINI_API_URL', url.trim());
+
+        if (mode === 'proxy') {
+            // Proxy local: no pedimos key al navegador. Asumimos que el usuario ejecuta el proxy en este repo.
+            const url = '/api/generate';
+            sessionStorage.setItem('GEMINI_API_URL', url);
+            return { mode, key: null, url };
+        } else {
+            let key = sessionStorage.getItem('GEMINI_API_KEY');
+            let url = sessionStorage.getItem('GEMINI_API_URL');
+            if (!key) {
+                key = prompt('Introduce tu API key para Gemini (se guardará temporalmente en esta sesión):');
+                if (key) sessionStorage.setItem('GEMINI_API_KEY', key.trim());
+            }
+            if (!url) {
+                url = prompt('Introduce la URL del endpoint para Gemini Flash (ej: https://api.yourprovider/v1):', 'https://YOUR_GEMINI_ENDPOINT') || 'https://YOUR_GEMINI_ENDPOINT';
+                if (url) sessionStorage.setItem('GEMINI_API_URL', url.trim());
+            }
+            return { mode, key: sessionStorage.getItem('GEMINI_API_KEY'), url: sessionStorage.getItem('GEMINI_API_URL') };
         }
-        return { key: sessionStorage.getItem('GEMINI_API_KEY'), url: sessionStorage.getItem('GEMINI_API_URL') };
     }
 
     async function sendToGemini(message) {
         const settings = ensureApiSettings();
-        if (!settings.key || !settings.url) throw new Error('Falta API key o URL del endpoint.');
+        if (!settings.url) throw new Error('Falta URL del endpoint.');
 
-        // Payload genérico: intenta convertirse a la forma que tu endpoint requiera.
+        // Payload genérico: el proxy o endpoint debería aceptar { prompt, model, max_tokens }
         const payload = {
-            model: 'gemini-flash-1',
             prompt: message,
+            model: 'gemini-flash-1',
             max_tokens: 512
         };
 
+        const headers = { 'Content-Type': 'application/json' };
+        // Si el usuario eligió modo directo, incluimos la clave en Authorization
+        if (settings.mode === 'direct' && settings.key) headers['Authorization'] = `Bearer ${settings.key}`;
+
         const res = await fetch(settings.url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.key}`
-            },
+            headers,
             body: JSON.stringify(payload)
         });
 
