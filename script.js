@@ -212,58 +212,25 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
         if (el) el.remove();
     }
 
-  // Obtener API key de Gemini desde sessionStorage o solicitar al usuario
-  function getApiKey() {
-    let key = sessionStorage.getItem('GEMINI_API_KEY');
-    if (!key) {
-      key = prompt('Introduce tu API key de Google Generative AI (Gemini):\n\nPuedes obtenerla en: https://aistudio.google.com/app/apikey');
-      if (key) {
-        sessionStorage.setItem('GEMINI_API_KEY', key.trim());
-      }
-    }
-    return key;
-  }    async function sendToGemini(message) {
-        const apiKey = getApiKey();
-        if (!apiKey) throw new Error('API key no proporcionada. Por favor, introduce tu API key de Gemini.');
-
-        // Usar la API oficial de Google Generative AI
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-
-        const payload = {
-            contents: [
-                {
-                    parts: [
-                        {
-                            text: message
-                        }
-                    ]
-                }
-            ],
-            generationConfig: {
-                maxOutputTokens: 512,
-                temperature: 0.7
-            }
-        };
-
-        const res = await fetch(url, {
+  // El chatbot ahora usa un endpoint proxy local que oculta la API key
+  async function sendToGemini(message) {
+        const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ message })
         });
 
         if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`Error ${res.status}: ${errText}`);
+            const errData = await res.json();
+            throw new Error(errData.error || `Error ${res.status}`);
         }
 
         const data = await res.json();
-        
-        // Extraer el texto de la respuesta de Gemini
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-            return data.candidates[0].content.parts[0].text;
+        if (data.reply) {
+            return data.reply;
         }
         
-        throw new Error('Formato inesperado en la respuesta de Gemini.');
+        throw new Error('Respuesta inesperada del servidor.');
     }
 
     form.addEventListener('submit', async (e) => {
@@ -279,7 +246,7 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
             appendMessage(reply, 'assistant');
         } catch (err) {
             removeLoading();
-            const errMsg = err.message || 'Hubo un error al conectar con Gemini. Verifica que tu API key sea válida.';
+            const errMsg = err.message || 'Hubo un error al conectar con el asistente.';
             appendMessage(errMsg, 'assistant');
             console.error('Chatbot error:', err);
         }
