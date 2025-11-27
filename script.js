@@ -227,7 +227,7 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
         if (!apiKey) throw new Error('API key no proporcionada. Por favor, introduce tu API key de Gemini.');
 
         // Usar la API oficial de Google Generative AI
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
         const payload = {
             contents: [
