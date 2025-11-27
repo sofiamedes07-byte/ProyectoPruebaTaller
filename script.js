@@ -220,17 +220,36 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
             body: JSON.stringify({ message })
         });
 
+        // Primero leer el texto completo de la respuesta
+        const responseText = await res.text();
+        
         if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error || `Error ${res.status}`);
+            // Intentar parsear como JSON si es posible
+            try {
+                const errData = JSON.parse(responseText);
+                throw new Error(errData.error || `Error ${res.status}`);
+            } catch (e) {
+                throw new Error(`Error ${res.status}: ${responseText || 'Sin respuesta del servidor'}`);
+            }
         }
 
-        const data = await res.json();
+        // Intentar parsear la respuesta exitosa
+        if (!responseText) {
+            throw new Error('El servidor devolvió una respuesta vacía');
+        }
+
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            throw new Error(`Error al parsear respuesta del servidor: ${responseText.substring(0, 100)}`);
+        }
+
         if (data.reply) {
             return data.reply;
         }
         
-        throw new Error('Respuesta inesperada del servidor.');
+        throw new Error('Respuesta inesperada del servidor: ' + JSON.stringify(data));
     }
 
     form.addEventListener('submit', async (e) => {

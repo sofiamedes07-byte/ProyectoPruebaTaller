@@ -42,34 +42,50 @@ app.post('/api/chat', async (req, res) => {
       }
     };
 
+    console.log(`[Chat] Enviando mensaje a Gemini: "${message.substring(0, 50)}..."`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
+    const responseText = await response.text();
+    console.log(`[Chat] Status: ${response.status}, Response: ${responseText.substring(0, 200)}`);
+
     if (!response.ok) {
-      const errText = await response.text();
-      return res.status(response.status).json({ error: errText });
+      console.error(`[Error] Respuesta no-OK de Gemini: ${responseText}`);
+      return res.status(response.status).json({ error: `Error ${response.status}: ${responseText}` });
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error(`[Error] No se pudo parsear JSON: ${responseText}`);
+      return res.status(500).json({ error: 'Respuesta inválida de Gemini API' });
+    }
     
     // Extraer el texto de la respuesta de Gemini
     if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-      return res.json({ reply: data.candidates[0].content.parts[0].text });
+      const reply = data.candidates[0].content.parts[0].text;
+      console.log(`[Chat] Respuesta: "${reply.substring(0, 50)}..."`);
+      return res.json({ reply });
     }
     
+    console.error(`[Error] Formato inesperado en respuesta:`, data);
     return res.status(500).json({ error: 'Formato inesperado en la respuesta de Gemini.' });
   } catch (err) {
-    console.error('Proxy error:', err);
-    return res.status(502).json({ error: 'Error conectando a Gemini API', details: err.message });
+    console.error('[Proxy error]:', err);
+    return res.status(502).json({ error: `Error conectando a Gemini API: ${err.message}` });
   }
 });
 
 app.listen(PORT, () => {
   console.log(`Servidor proxy escuchando en http://localhost:${PORT}`);
   console.log(`Abre http://localhost:${PORT} en tu navegador`);
+  console.log(`API key configurada: ${GEMINI_API_KEY.substring(0, 10)}...`);
 });
+
 
 
