@@ -55,7 +55,7 @@ window.addEventListener('scroll', () => {
 function typeWriter(element, text, speed = 100) {
     let i = 0;
     element.innerHTML = '';
-    
+
     function type() {
         if (i < text.length) {
             element.innerHTML += text.charAt(i);
@@ -63,7 +63,7 @@ function typeWriter(element, text, speed = 100) {
             setTimeout(type, speed);
         }
     }
-    
+
     type();
 }
 
@@ -104,7 +104,7 @@ if (aboutSection) {
 
 // Efecto hover en tarjetas de contacto
 document.querySelectorAll('.contact-card').forEach(card => {
-    card.addEventListener('mouseenter', function() {
+    card.addEventListener('mouseenter', function () {
         this.style.background = 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)';
         this.style.color = '#ffffff';
         const icon = this.querySelector('.contact-icon');
@@ -112,8 +112,8 @@ document.querySelectorAll('.contact-card').forEach(card => {
             icon.style.transform = 'scale(1.2) rotate(10deg)';
         }
     });
-    
-    card.addEventListener('mouseleave', function() {
+
+    card.addEventListener('mouseleave', function () {
         this.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)';
         this.style.color = '#1e293b';
         const icon = this.querySelector('.contact-icon');
@@ -212,17 +212,31 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
         if (el) el.remove();
     }
 
-  // El chatbot ahora usa un endpoint proxy local que oculta la API key
-  async function sendToGemini(message) {
-        const res = await fetch('/api/chat', {
+    // El chatbot ahora usa un endpoint proxy local que oculta la API key
+    async function sendToGemini(message) {
+        const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            headers: { 'Content-Type': 'application/json', 'X-goog-api-key': 'AIzaSyARZeXIFFSTgwXN-NminYLlpDmVvIsABAU' },
+            body: JSON.stringify({
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": message
+                            }
+                        ]
+                    }
+                ]
+            })
         });
 
         // Primero leer el texto completo de la respuesta
-        const responseText = await res.text();
-        
+
+        const json = await res.json();
+
+
+        const responseText = json.candidates[0].content.parts[0].text;
+
         if (!res.ok) {
             // Intentar parsear como JSON si es posible
             try {
@@ -238,18 +252,7 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
             throw new Error('El servidor devolvió una respuesta vacía');
         }
 
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (e) {
-            throw new Error(`Error al parsear respuesta del servidor: ${responseText.substring(0, 100)}`);
-        }
-
-        if (data.reply) {
-            return data.reply;
-        }
-        
-        throw new Error('Respuesta inesperada del servidor: ' + JSON.stringify(data));
+        return responseText;
     }
 
     form.addEventListener('submit', async (e) => {
