@@ -212,72 +212,58 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
         if (el) el.remove();
     }
 
-    // Obtener/guardar API key y endpoint en sessionStorage (temporal, no seguro para producción)
-    function ensureApiSettings() {
-        // Soporte de dos modos: "proxy" recomendado (llama a /api/generate local), o "direct" (usa la key en el navegador)
-        let mode = sessionStorage.getItem('CHAT_MODE');
-        if (!mode) {
-            mode = prompt('Elige modo: "proxy" (recomendado) o "direct" (pegar API key en el navegador, no seguro). Escribe proxy o direct:', 'proxy') || 'proxy';
-            mode = mode.toLowerCase() === 'direct' ? 'direct' : 'proxy';
-            sessionStorage.setItem('CHAT_MODE', mode);
-        }
-
-        if (mode === 'proxy') {
-            // Proxy local: no pedimos key al navegador. Asumimos que el usuario ejecuta el proxy en este repo.
-            const url = '/api/generate';
-            sessionStorage.setItem('GEMINI_API_URL', url);
-            return { mode, key: null, url };
-        } else {
-            let key = sessionStorage.getItem('GEMINI_API_KEY');
-            let url = sessionStorage.getItem('GEMINI_API_URL');
-            if (!key) {
-                key = prompt('Introduce tu API key para Gemini (se guardará temporalmente en esta sesión):');
-                if (key) sessionStorage.setItem('GEMINI_API_KEY', key.trim());
-            }
-            if (!url) {
-                url = prompt('Introduce la URL del endpoint para Gemini Flash (ej: https://api.yourprovider/v1):', 'https://YOUR_GEMINI_ENDPOINT') || 'https://YOUR_GEMINI_ENDPOINT';
-                if (url) sessionStorage.setItem('GEMINI_API_URL', url.trim());
-            }
-            return { mode, key: sessionStorage.getItem('GEMINI_API_KEY'), url: sessionStorage.getItem('GEMINI_API_URL') };
-        }
+  // Obtener API key de Gemini desde sessionStorage o solicitar al usuario
+  function getApiKey() {
+    let key = sessionStorage.getItem('GEMINI_API_KEY');
+    if (!key) {
+      key = prompt('Introduce tu API key de Google Generative AI (Gemini):\n\nPuedes obtenerla en: https://aistudio.google.com/app/apikey');
+      if (key) {
+        sessionStorage.setItem('GEMINI_API_KEY', key.trim());
+      }
     }
+    return key;
+  }    async function sendToGemini(message) {
+        const apiKey = getApiKey();
+        if (!apiKey) throw new Error('API key no proporcionada. Por favor, introduce tu API key de Gemini.');
 
-    async function sendToGemini(message) {
-        const settings = ensureApiSettings();
-        if (!settings.url) throw new Error('Falta URL del endpoint.');
+        // Usar la API oficial de Google Generative AI
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        // Payload genérico: el proxy o endpoint debería aceptar { prompt, model, max_tokens }
         const payload = {
-            prompt: message,
-            model: 'gemini-flash-1',
-            max_tokens: 512
+            contents: [
+                {
+                    parts: [
+                        {
+                            text: message
+                        }
+                    ]
+                }
+            ],
+            generationConfig: {
+                maxOutputTokens: 512,
+                temperature: 0.7
+            }
         };
 
-        const headers = { 'Content-Type': 'application/json' };
-        // Si el usuario eligió modo directo, incluimos la clave en Authorization
-        if (settings.mode === 'direct' && settings.key) headers['Authorization'] = `Bearer ${settings.key}`;
-
-        const res = await fetch(settings.url, {
+        const res = await fetch(url, {
             method: 'POST',
-            headers,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        const text = await res.text();
-        try {
-            const json = JSON.parse(text);
-            // Varios formatos posibles; intentamos algunos campos comunes
-            if (json.output && typeof json.output === 'string') return json.output;
-            if (json.output && json.output[0] && json.output[0].content) return json.output[0].content;
-            if (json.candidates && json.candidates[0] && json.candidates[0].content) return json.candidates[0].content;
-            if (json.choices && json.choices[0] && json.choices[0].message) return json.choices[0].message.content || JSON.stringify(json.choices[0].message);
-            // Si llega como texto simple dentro de alguna propiedad
-            const flat = JSON.stringify(json);
-            return flat;
-        } catch (e) {
-            // No JSON, devolver texto plano
-            return text;
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Error ${res.status}: ${errText}`);
         }
+
+        const data = await res.json();
+        
+        // Extraer el texto de la respuesta de Gemini
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+            return data.candidates[0].content.parts[0].text;
+        }
+        
+        throw new Error('Formato inesperado en la respuesta de Gemini.');
     }
 
     form.addEventListener('submit', async (e) => {
@@ -293,7 +279,8 @@ console.log('%c- Sofia Victoria Espinola Medina', 'color: #ec4899; font-size: 14
             appendMessage(reply, 'assistant');
         } catch (err) {
             removeLoading();
-            appendMessage('Hubo un error al conectar con el asistente. Revisa la API key y el endpoint.', 'assistant');
+            const errMsg = err.message || 'Hubo un error al conectar con Gemini. Verifica que tu API key sea válida.';
+            appendMessage(errMsg, 'assistant');
             console.error('Chatbot error:', err);
         }
     });
